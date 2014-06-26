@@ -21,6 +21,6 @@ use Mix.Config
 #
 #     import_config "#{Mix.env}.exs"
 
-config: :extcd,
-    host: "http://localhost:8080/v2/keys/",
+config :extcd,
+    host: "http://127.0.0.1:4001/v2/keys/",
     timeout: 5000

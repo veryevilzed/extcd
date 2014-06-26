@@ -15,7 +15,9 @@ defmodule Extcd.Mixfile do
 
   defp deps do
     [
-      {:httpoison, github: "edgurgel/httpoison"}
+      {:httpoison, github: "edgurgel/httpoison"},
+      {:jazz, github: "meh/jazz"},
+      {:lax, github: "d0rc/lax"}
     ]
   end
 end

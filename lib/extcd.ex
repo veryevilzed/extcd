@@ -1,8 +1,61 @@
+import LAXer
+
 defmodule Extcd do
   use Application
 
-  # See http://elixir-lang.org/docs/stable/elixir/Application.html
-  # for more information on OTP Applications
+  @etcd Dict.get(Application.get_all_env(:extcd), :host, "http://localhost:8080/v2/keys/")
+  @timeout Dict.get(Application.get_all_env(:extcd), :timeout, 5000)
+
+  defmacrop body_encode(list) do
+    quote do
+      for {key, value} <- unquote(list), into: "" do
+        "#{key}=#{value}&"
+      end
+    end
+  end
+
+  def get(path, options \\ []) do
+    case get_with_details(path, options) do
+      false -> false
+      details -> 
+        case la details["node"]["dir"] do
+          true -> la details["node"]["nodes"]
+          nil -> 
+            value = la details["node"]["value"]
+            case Jazz.decode(value) do
+              {:ok, json} -> json
+              _ -> value
+            end
+        end
+    end
+  end
+
+
+  def get_with_details(path, options \\ []) do
+    timeout = Keyword.get options, :timeout, @timeout
+    case HTTPoison.get "#{@etcd}#{path}", [], [timeout: timeout] do
+      %HTTPoison.Response{status_code: 200, body: body} -> body |> Jazz.decode!
+      _ -> false
+    end
+  end
+
+  def set(path, value), do: set(path, value, [])
+  def set(path, value, options) when is_binary(value) do
+    timeout = Keyword.get options, :timeout, @timeout
+    options = Keyword.delete options, :timeout
+    case HTTPoison.request :put, "#{@etcd}#{path}", body_encode([value: value] ++ options), [{"Content-Type", "application/x-www-form-urlencoded"}], [timeout: timeout] do
+      %HTTPoison.Response{status_code: code, body: body} when code in [200, 201] -> body |> Jazz.decode!
+      %HTTPoison.Response{status_code: 307} -> set path, value, options
+      _ -> false
+    end
+     #HTTPoison.request :put, "#{@etcd}#{path}", body_encode([value: value] ++ options), [{"Content-Type", "application/x-www-form-urlencoded"}], [timeout: timeout]
+  end
+  def set(path, value, options) do
+    set(path, Jazz.encode!(value), options)
+  end
+
+
+
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
 
