@@ -43,7 +43,6 @@ defmodule Extcd do
   def set(path, value, options) when is_binary(value) do
     timeout = Keyword.get options, :timeout, @timeout
     options = Keyword.delete options, :timeout
-    IO.puts "PUT Into #{@etcd}#{path} Values: #{value}"
     case HTTPoison.request :put, "#{@etcd}#{path}", body_encode([value: value] ++ options), [{"Content-Type", "application/x-www-form-urlencoded"}], [timeout: timeout] do
       %HTTPoison.Response{status_code: code, body: body} when code in [200, 201] -> body |> Jazz.decode!
       %HTTPoison.Response{status_code: 307} -> set path, value, options
