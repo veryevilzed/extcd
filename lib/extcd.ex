@@ -40,7 +40,7 @@ defmodule Extcd do
   end
 
   def set_term(path, value) do
-    set(path, value |> :erlang.term_to_binary |> :base64.encode |> URI.encode_www_form)
+    set(path, value |> :erlang.term_to_binary |> :base64.encode |> URI.encode)
   end
   
   def get_term(path) do
