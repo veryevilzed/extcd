@@ -35,10 +35,10 @@ defmodule Extcd do
     timeout = Keyword.get options, :timeout, @timeout
     case HTTPoison.get "#{@etcd}#{path}", [], [timeout: timeout] do
       %HTTPoison.Response{status_code: 200, body: body} -> body |> Jazz.decode!
-      %HTTPoison.Response{status_code: code, body: _} when status >= 500 -> raise "Etcd return #{code}"
-      _ -> false
+      %HTTPoison.Response{status_code: 404} -> false
     end
   end
+
 
   def set_term(path, value) do
     set(path, value |> :erlang.term_to_binary |> :base64.encode |> URI.encode)
